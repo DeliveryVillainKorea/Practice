@@ -2,7 +2,7 @@ const https = require('https');
 const http = require('http');
 const cheerio = require('cheerio');
 
-function fetch(url, redirects = 0) {
+function fetchHtml(url, redirects = 0) {
   if (redirects > 5) return Promise.reject(new Error('too many redirects'));
   return new Promise((resolve, reject) => {
     const mod = url.startsWith('https') ? https : http;
@@ -17,7 +17,7 @@ function fetch(url, redirects = 0) {
         const next = res.headers.location.startsWith('http')
           ? res.headers.location
           : new URL(res.headers.location, url).href;
-        return fetch(next, redirects + 1).then(resolve).catch(reject);
+        return fetchHtml(next, redirects + 1).then(resolve).catch(reject);
       }
       const chunks = [];
       res.on('data', c => chunks.push(c));
@@ -32,7 +32,8 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
-  const { url } = req.query;
+  let { url } = req.query;
+  if (Array.isArray(url)) url = url[0];
   if (!url) return res.status(400).json({ error: 'url 파라미터가 필요합니다.' });
 
   let targetUrl;
@@ -42,8 +43,22 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: '올바른 URL이 아닙니다.' });
   }
 
+  if (targetUrl.protocol !== 'http:' && targetUrl.protocol !== 'https:') {
+    return res.status(400).json({ error: 'http/https URL만 지원합니다.' });
+  }
+
+  // 내부망/로컬 주소로의 요청 차단 (SSRF 방지)
+  const host = targetUrl.hostname;
+  if (
+    host === 'localhost' || host === '0.0.0.0' || host === '::1' ||
+    /^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host) ||
+    /^169\.254\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+  ) {
+    return res.status(400).json({ error: '허용되지 않는 주소입니다.' });
+  }
+
   try {
-    const html = await fetch(targetUrl.href);
+    const html = await fetchHtml(targetUrl.href);
     const $ = cheerio.load(html);
 
     const og = (prop) =>
@@ -55,7 +70,7 @@ module.exports = async (req, res) => {
     res.json({
       title:       og('title') || $('title').text().trim(),
       description: og('description'),
-      image:       image.startsWith('http') ? image : image ? new URL(image, targetUrl.origin).href : '',
+      image:       image.startsWith('http') ? image : image ? new URL(image, targetUrl.href).href : '',
       url:         og('url') || targetUrl.href,
     });
   } catch (e) {
