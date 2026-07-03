@@ -1,0 +1,159 @@
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>요기요 · 홈</title>
+<link rel="stylesheet" href="css/tokens.css" />
+<link rel="stylesheet" href="css/style.css" />
+
+<div class="stage">
+  <!-- 393 x 851 고정형 프레임 -->
+  <div class="phone" id="home-screen">
+
+   <div class="scroll">
+    <!-- ============ 상단 히어로 (그라디언트) ============ -->
+    <header class="hero">
+      <!-- 상태바 -->
+      <div class="status-bar">
+        <span class="status-time">21:46</span>
+        <span class="status-icons">
+          <span class="signal"></span>
+          <span class="net">LTE</span>
+          <span class="battery"></span>
+        </span>
+      </div>
+
+      <!-- 탑 내비 -->
+      <div class="top-nav">
+        <button class="address">홍예로 213 <span class="caret">▾</span></button>
+        <button class="menu-btn">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="menu-badge">1</span>
+        </button>
+      </div>
+
+      <!-- 포인트 빅매치 배너 -->
+      <div class="point-hero">
+        <div class="point-hero__text">
+          <p class="point-hero__title">포인트 빅매치</p>
+          <p class="point-hero__title point-hero__title--strong">1만 포인트 더 적립</p>
+          <p class="point-hero__cta">지금 주문하러 가기 &nbsp;›</p>
+        </div>
+        <div class="point-hero__amount">
+          <span class="point-hero__big">1만</span>
+          <span class="point-hero__unit">포인트</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============ 스크롤 본문 ============ -->
+    <main class="body">
+
+      <!-- 검색바 -->
+      <div class="search">
+        <span class="search__rank">10</span>
+        <span class="search__kw">닭똥집</span>
+        <span class="search__trend">↑</span>
+        <svg class="search__icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" fill="none" stroke="#333" stroke-width="2"/>
+          <path d="M16 16l5 5" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <!-- 퀵 액션 3종 -->
+      <section class="quick">
+        <div class="quick__item">
+          <span class="badge badge--point">최대 10% 적립</span>
+          <span class="quick__ico quick__ico--point">P</span>
+          <span class="quick__label">요기더적립</span>
+        </div>
+        <div class="quick__item">
+          <span class="badge badge--pink">5% 할인</span>
+          <span class="quick__ico quick__ico--box">📦</span>
+          <span class="quick__label">포장</span>
+        </div>
+        <div class="quick__item">
+          <span class="badge badge--green">현장결제</span>
+          <span class="quick__ico quick__ico--won">₩</span>
+          <span class="quick__label">고유가지원금</span>
+        </div>
+      </section>
+
+      <!-- 카테고리 -->
+      <section class="category">
+        <div class="category__promo">
+          <span class="category__promo-sub">이번 주 한정!</span>
+          <span class="category__promo-title">메가적립<br />페스타</span>
+        </div>
+
+        <div class="category__grid">
+          <a class="cat"><span class="cat__ico">🍴</span><span class="cat__name">전체</span></a>
+          <a class="cat"><span class="cat__ico">🍗</span><span class="cat__name">치킨</span></a>
+          <a class="cat"><span class="cat__ico">🍔</span><span class="cat__name">버거</span></a>
+          <a class="cat"><span class="cat__ico">🥩</span><span class="cat__name">족발/보쌈</span></a>
+          <a class="cat"><span class="badge badge--pink cat__badge">6천원할인</span><span class="cat__ico cat__ico--brand">BHC</span><span class="cat__name">BHC치킨</span></a>
+          <a class="cat"><span class="cat__ico">🍜</span><span class="cat__name">중국집</span></a>
+          <a class="cat"><span class="cat__ico">🍚</span><span class="cat__name">한식</span></a>
+          <a class="cat"><span class="cat__ico">☕</span><span class="cat__name">카페/디저트</span></a>
+        </div>
+
+        <div class="dots"><span class="dot dot--on"></span><span class="dot"></span></div>
+      </section>
+
+      <!-- 제휴 브랜드 -->
+      <section class="brand-row">
+        <a class="brand"><span class="brand__ico">🛒</span><span class="brand__name">장보기·쇼핑</span></a>
+        <a class="brand"><span class="brand__ico">🎟️</span><span class="brand__name">장보기쿠폰팩</span></a>
+        <a class="brand"><span class="badge badge--pink brand__badge">무배+7천원</span><span class="brand__ico brand__ico--emart">emart</span><span class="brand__name">이마트슈퍼</span></a>
+        <a class="brand"><span class="badge badge--pink brand__badge">무배+4천원</span><span class="brand__ico brand__ico--cu">CU</span><span class="brand__name">CU</span></a>
+        <a class="brand"><span class="badge badge--pink brand__badge">6천원 할인</span><span class="brand__ico brand__ico--gs">GS</span><span class="brand__name">GS더프레시</span></a>
+      </section>
+
+      <!-- 하단 프로모 배너 -->
+      <section class="promo">
+        <div class="promo__text">
+          <span class="promo__brand">BHC</span>
+          <span class="promo__title">치킨 6,000원 할인 쿠폰</span>
+        </div>
+        <span class="promo__tag">요기배달</span>
+      </section>
+
+    </main>
+   </div>
+
+    <!-- ============ FAB ============ -->
+    <button class="fab">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+        <path d="M4 5h2l2 10h9l2-7H7" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="9" cy="19" r="1.4" fill="#fff"/>
+        <circle cx="17" cy="19" r="1.4" fill="#fff"/>
+      </svg>
+      <span class="fab__badge">1</span>
+    </button>
+
+    <!-- ============ 하단 내비 ============ -->
+    <nav class="bottom-nav">
+      <a class="tab tab--on">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" fill="currentColor"/></svg>
+        <span>홈</span>
+      </a>
+      <a class="tab">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M8 8h.01M16 16h.01M7 17L17 7M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span>할인/혜택</span>
+      </a>
+      <a class="tab">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <span>주문내역</span>
+      </a>
+      <a class="tab">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 20s-7-4.5-7-9.5A3.5 3.5 0 0 1 12 7a3.5 3.5 0 0 1 7 3c0 5-7 10-7 10z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span>찜</span>
+      </a>
+      <a class="tab">
+        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span>마이요기요</span>
+      </a>
+    </nav>
+
+  </div>
+</div>

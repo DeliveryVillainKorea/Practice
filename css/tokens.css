@@ -1,0 +1,77 @@
+/* =========================================================
+   요기요 디자인 시스템 — Design Tokens
+   Source: Figma "요기요 디자인" / design system (node 37:116)
+   ========================================================= */
+:root {
+  /* ---- Brand ---- */
+  --brand-primary: #fa0050;
+  --brand-primary-strong: #e50049;
+  --brand-primary-weak: #e74774;
+  --brand-dropshadow: rgba(250, 0, 80, 0.2);
+
+  /* ---- Text ---- */
+  --text-main: #333333;
+  --text-sub: #666666;
+  --text-inverse: #ffffff;
+
+  /* ---- Icon ---- */
+  --icon-main: #333333;
+  --icon-sub: #a2a2a2;
+  --icon-inverse: #ffffff;
+
+  /* ---- Background ---- */
+  --bg-main: #ffffff;
+  --bg-sub: #666666;
+  --bg-weak: #b7b7b7;
+  --bg-inverse: #333333;
+  --bg-placeholder: #f8f8f8;
+  --bg-transparency-dark: rgba(23, 23, 23, 0.95);
+  --bg-transparency-light: rgba(255, 255, 255, 0.95);
+
+  /* ---- Stroke ---- */
+  --stroke-main: #cccccc;
+  --stroke-sub: #e5e5e5;
+  --stroke-bottom-nav: rgba(102, 102, 102, 0.8);
+
+  /* ---- Global point ---- */
+  --grayscale-800: #333333;
+  --point-yellow: #ffce00;
+  --point-blue-strong: #0c74e4;
+  --point-blue: #c5dffb;
+  --point-blue-weak: #e7f2fe;
+
+  /* ---- Radius ---- */
+  --radius-full: 99999px;
+  --radius-basic: 12px;
+  --radius-small: 8px;
+
+  /* ---- Effect ---- */
+  --shadow-top-nav: 0 0 4px rgba(0, 0, 0, 0.12);
+
+  /* ---- Typography (Pretendard) ---- */
+  --font-family: "Pretendard", "Pretendard Variable", -apple-system,
+    BlinkMacSystemFont, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+
+  /* heading-md : Bold 25 / 1.2 / -2.5 */
+  --heading-md-size: 25px;
+  --heading-md-weight: 700;
+  --heading-md-lh: 1.2;
+  --heading-md-ls: -0.5px;
+
+  /* title-sm : Bold 17 / 1.2 / 0 */
+  --title-sm-size: 17px;
+  --title-sm-weight: 700;
+
+  /* body-sm : Regular 17 / 1.2 / 0 */
+  --body-sm-size: 17px;
+  --body-sm-weight: 400;
+
+  /* button-md : Bold 15 / 1.2 / 0 */
+  --button-md-size: 15px;
+  --button-md-weight: 700;
+
+  /* caption-lg : Regular 14 / 1.2 / -2.5 */
+  --caption-lg-size: 14px;
+  --caption-lg-weight: 400;
+  --caption-lg-ls: -0.3px;
+}
