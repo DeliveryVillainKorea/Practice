@@ -128,19 +128,40 @@ const ADMIN_PW = 'mori2025';
 let ogCache = null;
 let editingStoreId = null;
 let editingBannerId = null;
+let storeCache = [];   // 마지막으로 불러온 상품 목록 (수정 버튼에서 참조)
+let bannerCache = [];  // 마지막으로 불러온 배너 목록
+
+// DB 값을 innerHTML에 넣기 전 이스케이프
+function escHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+function hostOf(url) {
+  try { return new URL(url).hostname.replace('www.', ''); } catch (e) { return ''; }
+}
+
+function enterAdmin() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminScreen').style.display = 'block';
+  loadList();
+  loadEpisodes();
+  loadBanners();
+}
 
 function checkPw() {
   const pw = document.getElementById('pwInput').value;
   if (pw === ADMIN_PW) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminScreen').style.display = 'block';
-    loadList();
-    loadEpisodes();
-    loadBanners();
+    sessionStorage.setItem('mori_admin', '1');
+    enterAdmin();
   } else {
     alert('비밀번호가 틀렸어요.');
   }
 }
+
+// 같은 탭 세션 내에서는 로그인 유지
+if (sessionStorage.getItem('mori_admin') === '1') enterAdmin();
 
 async function previewUrl() {
   const url = document.getElementById('urlInput').value.trim();
@@ -194,16 +215,18 @@ async function addItem() {
   }
 }
 
-function editStore(id, url, ep, title, image) {
+function editStore(id) {
+  const item = storeCache.find(x => x.id === id);
+  if (!item) return;
   editingStoreId = id;
-  document.getElementById('urlInput').value = url;
-  document.getElementById('epSelect').value = ep;
-  ogCache = { title, image, url };
+  document.getElementById('urlInput').value = item.url;
+  document.getElementById('epSelect').value = item.ep;
+  ogCache = { title: item.title, image: item.image, url: item.url };
   const box = document.getElementById('previewBox');
   box.style.display = 'block';
-  document.getElementById('previewImg').src = image || '';
-  document.getElementById('previewTitle').textContent = title || '';
-  document.getElementById('previewDomain').textContent = new URL(url).hostname.replace('www.', '');
+  document.getElementById('previewImg').src = item.image || '';
+  document.getElementById('previewTitle').textContent = item.title || '';
+  document.getElementById('previewDomain').textContent = hostOf(item.url);
   document.getElementById('addItemBtn').textContent = '수정하기';
   document.getElementById('urlInput').scrollIntoView({ behavior: 'smooth' });
 }
@@ -236,12 +259,17 @@ async function fetchBannerOg(url) {
 }
 
 async function loadEpisodes() {
-  const res = await fetch(SUPABASE_URL + '/rest/v1/episodes?select=*&order=ep.asc', { headers: SB_HEADERS });
-  const eps = await res.json();
-  eps.forEach(e => {
-    const input = document.getElementById('epTitle' + e.ep);
-    if (input) input.value = e.title || '';
-  });
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/episodes?select=*&order=ep.asc', { headers: SB_HEADERS });
+    if (!res.ok) throw new Error(await res.text());
+    const eps = await res.json();
+    eps.forEach(e => {
+      const input = document.getElementById('epTitle' + e.ep);
+      if (input) input.value = e.title || '';
+    });
+  } catch (e) {
+    console.error('에피소드 로드 실패:', e);
+  }
 }
 
 async function saveEpisodes() {
@@ -260,18 +288,26 @@ async function saveEpisodes() {
 }
 
 async function loadBanners() {
-  const res = await fetch(SUPABASE_URL + '/rest/v1/banners?select=*&order=order_num.asc', { headers: SB_HEADERS });
-  const items = await res.json();
   const list = document.getElementById('bannerList');
+  let items;
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/banners?select=*&order=order_num.asc', { headers: SB_HEADERS });
+    if (!res.ok) throw new Error(await res.text());
+    items = await res.json();
+  } catch (e) {
+    list.innerHTML = '<div class="empty">배너를 불러오지 못했어요.</div>';
+    return;
+  }
+  bannerCache = items;
   if (!items.length) { list.innerHTML = '<div class="empty">등록된 배너가 없어요.</div>'; return; }
   list.innerHTML = items.map(b => `
     <div class="item" id="banner-${b.id}">
-      <img src="${b.img_url}" alt="" onerror="this.style.background='#eee'" style="width:56px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0;">
+      <img src="${escHtml(b.img_url || '')}" alt="" onerror="this.style.background='#eee'" style="width:56px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0;">
       <div class="item-info">
-        <div class="item-title">${b.title || '—'}</div>
-        <div class="item-meta">${b.link_url ? new URL(b.link_url).hostname.replace('www.','') : ''} · 순서 ${b.order_num}</div>
+        <div class="item-title">${escHtml(b.title) || '—'}</div>
+        <div class="item-meta">${escHtml(hostOf(b.link_url))} · 순서 ${b.order_num}</div>
       </div>
-      <button class="btn-edit" onclick="editBanner(${b.id}, '${(b.link_url||b.img_url||'').replace(/'/g,"\\'")}', '${b.img_url||''}', '${(b.title||'').replace(/'/g,"\\'")}')">수정</button>
+      <button class="btn-edit" onclick="editBanner(${b.id})">수정</button>
       <button class="btn-delete" onclick="deleteBanner(${b.id})">삭제</button>
     </div>
   `).join('');
@@ -292,10 +328,15 @@ async function addBanner() {
     ? SUPABASE_URL + '/rest/v1/banners?id=eq.' + editingBannerId
     : SUPABASE_URL + '/rest/v1/banners';
 
+  // 수정 시에는 기존 subtitle/order_num을 건드리지 않는다
+  const body = isEdit
+    ? { img_url, title, link_url }
+    : { img_url, title, subtitle: '', link_url, order_num: 0 };
+
   const res = await fetch(endpoint, {
     method: isEdit ? 'PATCH' : 'POST',
     headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-    body: JSON.stringify({ img_url, title, subtitle: '', link_url, order_num: 0 })
+    body: JSON.stringify(body)
   });
   if (res.ok) {
     showToast(isEdit ? '수정됐어요!' : '배너 추가됐어요!');
@@ -310,32 +351,44 @@ async function addBanner() {
   }
 }
 
-function editBanner(id, pageUrl, imgUrl, title) {
+function editBanner(id) {
+  const b = bannerCache.find(x => x.id === id);
+  if (!b) return;
+  const pageUrl = b.link_url || b.img_url || '';
   editingBannerId = id;
   document.getElementById('bannerPageUrl').value = pageUrl;
-  bannerOgCache = { image: imgUrl, title, url: pageUrl };
+  bannerOgCache = { image: b.img_url || '', title: b.title || '', url: pageUrl };
   const box = document.getElementById('bannerPreviewBox');
   box.style.display = 'block';
-  document.getElementById('bannerPreviewImg').src = imgUrl;
-  document.getElementById('bannerPreviewTitle').textContent = title || '';
-  document.getElementById('bannerPreviewDomain').textContent = pageUrl ? new URL(pageUrl).hostname.replace('www.','') : '';
+  document.getElementById('bannerPreviewImg').src = b.img_url || '';
+  document.getElementById('bannerPreviewTitle').textContent = b.title || '';
+  document.getElementById('bannerPreviewDomain').textContent = hostOf(pageUrl);
   document.getElementById('addBannerBtn').textContent = '수정하기';
   document.getElementById('bannerPageUrl').scrollIntoView({ behavior: 'smooth' });
 }
 
 async function deleteBanner(id) {
   if (!confirm('배너를 삭제할까요?')) return;
-  await fetch(SUPABASE_URL + '/rest/v1/banners?id=eq.' + id, { method: 'DELETE', headers: SB_HEADERS });
+  const res = await fetch(SUPABASE_URL + '/rest/v1/banners?id=eq.' + id, { method: 'DELETE', headers: SB_HEADERS });
+  if (!res.ok) return alert('삭제 실패: ' + await res.text());
   document.getElementById('banner-' + id)?.remove();
   showToast('삭제됐어요.');
 }
 
 async function loadList() {
-  const res = await fetch(SUPABASE_URL + '/rest/v1/stores?select=*&order=created_at.desc', {
-    headers: SB_HEADERS
-  });
-  const items = await res.json();
   const list = document.getElementById('itemList');
+  let items;
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/stores?select=*&order=created_at.desc', {
+      headers: SB_HEADERS
+    });
+    if (!res.ok) throw new Error(await res.text());
+    items = await res.json();
+  } catch (e) {
+    list.innerHTML = '<div class="empty">상품을 불러오지 못했어요.</div>';
+    return;
+  }
+  storeCache = items;
 
   if (!items.length) {
     list.innerHTML = '<div class="empty">등록된 상품이 없어요.</div>';
@@ -344,12 +397,12 @@ async function loadList() {
 
   list.innerHTML = items.map(item => `
     <div class="item" id="item-${item.id}">
-      <img src="${item.image || ''}" alt="" onerror="this.style.background='#eee'">
+      <img src="${escHtml(item.image || '')}" alt="" onerror="this.style.background='#eee'">
       <div class="item-info">
-        <div class="item-title"><span class="ep-badge">ep.${item.ep}</span>${item.title || item.url}</div>
-        <div class="item-meta">${new URL(item.url).hostname.replace('www.','')}</div>
+        <div class="item-title"><span class="ep-badge">ep.${item.ep}</span>${escHtml(item.title || item.url)}</div>
+        <div class="item-meta">${escHtml(hostOf(item.url))}</div>
       </div>
-      <button class="btn-edit" onclick="editStore(${item.id}, '${item.url}', ${item.ep}, '${(item.title||'').replace(/'/g,"\\'")}', '${item.image||''}')">수정</button>
+      <button class="btn-edit" onclick="editStore(${item.id})">수정</button>
       <button class="btn-delete" onclick="deleteItem(${item.id})">삭제</button>
     </div>
   `).join('');
@@ -357,10 +410,11 @@ async function loadList() {
 
 async function deleteItem(id) {
   if (!confirm('삭제할까요?')) return;
-  await fetch(SUPABASE_URL + '/rest/v1/stores?id=eq.' + id, {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/stores?id=eq.' + id, {
     method: 'DELETE',
     headers: SB_HEADERS
   });
+  if (!res.ok) return alert('삭제 실패: ' + await res.text());
   document.getElementById('item-' + id)?.remove();
   showToast('삭제됐어요.');
 }

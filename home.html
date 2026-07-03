@@ -524,8 +524,16 @@ const SUPABASE_URL = 'https://arrnybkpgqeecwgdcbdi.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFycm55YmtwZ3FlZWN3Z2RjYmRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTc3MTEsImV4cCI6MjA5Nzk3MzcxMX0.fI_S3ffw6FPYkGjiYuqDyXLrgixRTq7KdbAieSNvrLA';
 const SB_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
 
+// DB에서 온 값을 innerHTML에 넣기 전 이스케이프
+function escHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
 (function() {
   let slides = [], N = 0, current = 0, isAnimating = false;
+  let suppressClick = false;
   let cards = [], navDots = [];
 
   const slider      = document.getElementById('bannerSlider');
@@ -583,6 +591,7 @@ const SB_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABA
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     isDragging = true;
+    suppressClick = false;
   }, { passive: true });
 
   wrap.addEventListener('touchmove', e => {
@@ -595,14 +604,14 @@ const SB_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABA
   wrap.addEventListener('touchend', e => {
     if (!isDragging) return; isDragging = false;
     const dx = e.changedTouches[0].clientX - startX;
-    if (Math.abs(dx) > 48) goTo(dx < 0 ? current + 1 : current - 1);
+    if (Math.abs(dx) > 48) { suppressClick = true; goTo(dx < 0 ? current + 1 : current - 1); }
   });
 
-  wrap.addEventListener('mousedown',  e => { startX = e.clientX; isDragging = true; });
+  wrap.addEventListener('mousedown',  e => { startX = e.clientX; isDragging = true; suppressClick = false; });
   wrap.addEventListener('mouseup',    e => {
     if (!isDragging) return; isDragging = false;
     const dx = e.clientX - startX;
-    if (Math.abs(dx) > 48) goTo(dx < 0 ? current + 1 : current - 1);
+    if (Math.abs(dx) > 48) { suppressClick = true; goTo(dx < 0 ? current + 1 : current - 1); }
   });
   wrap.addEventListener('mouseleave', e => { if (isDragging) { isDragging = false; } });
 
@@ -625,14 +634,17 @@ const SB_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABA
         const el = document.createElement('div');
         el.className = 'banner-card';
         el.innerHTML =
-          '<img src="' + s.img_url + '" alt="" draggable="false">' +
+          '<img src="' + escHtml(s.img_url) + '" alt="" draggable="false">' +
           '<div class="card-gradient-text">' +
-            '<div class="card-title">' + s.title.replace(/\\n/g, '<br>') + '</div>' +
-            '<div class="card-subtitle">' + s.subtitle + '</div>' +
+            '<div class="card-title">' + escHtml(s.title).replace(/\\n/g, '<br>') + '</div>' +
+            '<div class="card-subtitle">' + escHtml(s.subtitle) + '</div>' +
           '</div>';
         if (s.link_url) {
           el.style.cursor = 'pointer';
-          el.addEventListener('click', () => window.open(s.link_url, '_blank'));
+          el.addEventListener('click', () => {
+            if (suppressClick) return; // 드래그로 슬라이드한 경우 링크 열림 방지
+            window.open(s.link_url, '_blank');
+          });
         }
         slider.appendChild(el);
         return el;
@@ -648,25 +660,25 @@ const SB_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABA
       applyStates();
       showActiveText();
       timer = setInterval(() => goTo(current + 1), 4000);
-    });
+    })
+    .catch(e => console.error('배너 로드 실패:', e));
 })();
 </script>
 
 <script>
 (function() {
-  const API = 'https://mori-silk.vercel.app/api/og';
-
   function makeCard(store) {
     const card = document.createElement('div');
     card.className = 'store-card';
     if (store) {
-      const host = new URL(store.url).hostname.replace('www.', '');
+      let host = '';
+      try { host = new URL(store.url).hostname.replace('www.', ''); } catch (e) { /* 잘못된 URL이어도 카드 자체는 렌더 */ }
       card.innerHTML =
         '<div class="store-card-img">' +
-          (store.image ? '<img src="' + store.image + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">' : '') +
+          (store.image ? '<img src="' + escHtml(store.image) + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">' : '') +
         '</div>' +
-        '<div class="store-card-name">' + (store.title || '—') + '</div>' +
-        '<div class="store-card-meta"><span class="store-card-location">' + host + '</span></div>';
+        '<div class="store-card-name">' + (escHtml(store.title) || '—') + '</div>' +
+        '<div class="store-card-meta"><span class="store-card-location">' + escHtml(host) + '</span></div>';
       card.addEventListener('click', () => window.open(store.url, '_blank'));
     } else {
       card.innerHTML =
@@ -690,7 +702,8 @@ const SB_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABA
           badge.className = 'ep-badge ' + e.badge;
         }
       });
-    });
+    })
+    .catch(e => console.error('에피소드 로드 실패:', e));
 
   // 스토어 카드
   fetch(SUPABASE_URL + '/rest/v1/stores?select=*&order=ep.asc,created_at.asc', { headers: SB_HEADERS })
